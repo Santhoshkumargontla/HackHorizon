@@ -1,0 +1,166 @@
+<!-- index.html -->
+<!DOCTYPE html>  
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Review Detector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input[type="url"] {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .positive { background-color: #e8f5e9; }
+        .negative { background-color: #ffebee; }
+        .warning { background-color: #fff3e0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Fake Review Detector</h1>
+        <p>Enter a review URL to analyze its credibility:</p>
+        <input type="url" id="reviewUrl" placeholder="https://example.com/reviews/product123">
+        <button onclick="analyzeReview()">Analyze Review</button>
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Mock dataset of suspicious patterns and keywords
+        const suspiciousPatterns = {
+            overusedPhrases: ['best product ever', 'changed my life', '100% perfect'],
+            spamIndicators: ['buy now', 'click here', 'limited offer'],
+            genericTerms: ['good stuff', 'nice item', 'great thing']
+        };
+
+        // Sample sentiment analysis dictionary
+        const sentimentWords = {
+            positive: ['great', 'excellent', 'amazing', 'love', 'wonderful'],
+            negative: ['bad', 'terrible', 'awful', 'hate', 'poor']
+        };
+
+        // Mock review content based on URL patterns
+        const mockReviews = {
+            'amazon': 'Great product, works well, fast shipping',
+            'ebay': 'Best product ever! Buy now! Limited offer!',
+            'walmart': 'Good stuff, nice item, changed my life',
+            'fake': '100% perfect amazing deal click here'
+        };
+
+        function analyzeReview() {
+            const urlInput = document.getElementById('reviewUrl').value.toLowerCase();
+            const resultDiv = document.getElementById('result');
+            
+            if (!urlInput) {
+                alert('Please enter a URL!');
+                return;
+            }
+
+            // Simulate fetching review content based on URL
+            let review = '';
+            if (urlInput.includes('amazon')) review = mockReviews.amazon;
+            else if (urlInput.includes('ebay')) review = mockReviews.ebay;
+            else if (urlInput.includes('walmart')) review = mockReviews.walmart;
+            else review = mockReviews.fake;
+
+            // Calculate credibility score (1-10)
+            let score = 10;
+            let analysis = [];
+
+            // Check length (too short might be suspicious)
+            if (review.length < 20) {
+                score -= 3;
+                analysis.push('Review is unusually short');
+            }
+
+            // Check for suspicious patterns
+            suspiciousPatterns.overusedPhrases.forEach(phrase => {
+                if (review.includes(phrase)) {
+                    score -= 2;
+                    analysis.push(`Contains overused phrase: "${phrase}"`);
+                }
+            });
+
+            suspiciousPatterns.spamIndicators.forEach(indicator => {
+                if (review.includes(indicator)) {
+                    score -= 3;
+                    analysis.push(`Contains spam indicator: "${indicator}"`);
+                }
+            });
+
+            
+            let sentiment = 'neutral';
+            let positiveCount = 0;
+            let negativeCount = 0;
+
+            sentimentWords.positive.forEach(word => {
+                if (review.includes(word)) positiveCount++;
+            });
+
+            sentimentWords.negative.forEach(word => {
+                if (review.includes(word)) negativeCount++;
+            });
+
+            if (positiveCount > negativeCount) sentiment = 'positive';
+            else if (negativeCount > positiveCount) sentiment = 'negative';
+
+            // Adjust score based on extreme sentiment
+            if (positiveCount >= 3 && negativeCount === 0) {
+                score -= 2;
+                analysis.push('Overly positive sentiment detected');
+            }
+
+            // Ensure score stays between 1 and 10
+            score = Math.max(1, Math.min(10, score));
+
+            // Display results
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <h3>Analysis Results</h3>
+                <p><strong>URL:</strong> ${urlInput}</p>
+                <p><strong>Review Content:</strong> ${review}</p>
+                <p><strong>Credibility Score:</strong> ${score}/10</p>
+                <p><strong>Sentiment:</strong> ${sentiment}</p>
+                <p><strong>Observations:</strong></p>
+                <ul>
+                    ${analysis.length > 0 ? analysis.map(item => `<li>${item}</li>`).join('') : '<li>No suspicious patterns detected</li>'}
+                </ul>
+            `; 
+
+            // Apply appropriate styling
+            resultDiv.className = 'result ' + (score >= 7 ? 'positive' : score >= 4 ? 'warning' : 'negative');
+        }
+    </script>
+</body>
+</html>
